@@ -230,7 +230,7 @@
   }
   svg {
     fill: currentColor;
-    height: 30px;
-    width: 30px;
+    height: 1.5rem;
+    width: 1.5rem;
   }
 </style>

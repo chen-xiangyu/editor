@@ -5,7 +5,7 @@
     @mousedown="notSee()" 
   >
     <ul 
-      @mousedown="see()" 
+      @mousedown="seeMenu()" 
       v-show="visibleMenu" 
       :style="{ 
         left: position.left + 'px', 
@@ -15,14 +15,36 @@
       class="context-menu"
     >
       <div v-for="(value, key) in AIList" :key="key" class="item"  @mousedown="getAIMeaage(key)">
-          <!-- <el-icon><Brush /></el-icon> -->
-          {{ value }}
+        <svg class="remix">
+          <use :xlink:href="`${remixiconUrl}#ri-${'arrow-right-s-line'}`" />
+        </svg>
+        {{ value }}
       </div>
     </ul>
+    <el-card 
+      v-show="visibleCard" 
+      :style="{ 
+        'max-width': 480 + 'px',
+        left: position.left + 'px', 
+        top: position.top + 'px', 
+        display: (visibleCard ? 'grid' : 'none'),
+        position: 'absolute',
+      }" 
+    >
+      <p>{{ cardMsg }}</p>
+      <el-button type="primary" @mousedown="replace()">替换</el-button>
+      <el-button type="success" @mousedown="append()">追加</el-button>
+      <el-button type="info" @mousedown="ignore()">舍弃</el-button>
+    </el-card>
     <el-header>
       <el-menu mode="horizontal" :ellipsis="false">
         <div class="flex-grow" />
-        <el-menu-item @click="gotoUserProfile()">个人中心</el-menu-item>
+        <el-menu-item @click="gotoUserProfile()">
+          个人中心
+          <svg class="remix">
+            <use :xlink:href="`${remixiconUrl}#ri-${'arrow-right-s-line'}`" />
+          </svg>
+        </el-menu-item>
       </el-menu>
     </el-header>
 
@@ -43,14 +65,6 @@
       </el-main>
     </el-container>
   </el-container>
-  <div class="custom-modal" v-if="dataModalVisible" :style="modalStyle">
-    <div class="modal-content">
-      <p>asdsa</p>
-    </div>
-    <ul class="custom-list">
-      <li v-for="(item, index) in AIList" :key="index" @click="getAIMeaage(index)">{{ item }}</li>
-    </ul>
-  </div>
 </template>
 
 <script setup lang="ts" name="TextEditor">
@@ -75,6 +89,7 @@
   import SelectionBubbleMenu from "./components/SelectionBubbleMenu.vue"
 
   import { useEditorStore } from '@/store'
+  import { fa } from "element-plus/es/locales.mjs"
   const editorStore = useEditorStore()
 
   const editor = useEditor({
@@ -110,18 +125,6 @@
     'analysis': "分析内容",
   });
 
-  // 模态框
-  let dataModalVisible = ref(false)
-  const modalStyle = ref({})
-  function showDataModal(btnBottom: any, btnLeft: any) {
-    dataModalVisible.value = true;
-    modalStyle.value = {
-      top: `${btnBottom}px`,
-      left: `${btnLeft}px`,
-    }
-    // 从编辑器中移除焦点
-    // editor.commands.blur();
-  }
   const loadHeadings = () => {
     const headings = [] as any[]
     if (!editor.value) return
@@ -180,7 +183,9 @@
       // accountError.value = response.data.error
       let res = response.data
       if (res.status){
-        console.log(res.AIresponse)
+        console.log(res.answer)
+        cardMsg.value = res.answer
+        visibleCard.value = true
       } else{
         console.log(res.error)
       }
@@ -191,38 +196,12 @@
       // throw error // 可选的抛出错误
     }
 
-  }
-  
-  async function setAccessToken(){
-    try {
-      console.log("on mounted")
-      let data = {
-        accessToken: formInfo.AccessToken,
-      }
-      const response = await axios.post(
-        '/set-access-token/',
-        JSON.stringify(data),
-      )
-      // accountError.value = response.data.error
-      let res = response.data
-      if (res.status){
-        ElMessage({
-          message: res.message,
-          type: 'success',
-        })
-      } else{
-        console.log(res.error)
-      }
-      console.log('POST 请求成功：', response.data)
-      
-    } catch (error) {
-      console.error('POST 请求失败：', error)
-      // throw error // 可选的抛出错误
-    }
   }
 
   const fileContRef = ref(null)
   const visibleMenu = ref(false)
+  const visibleCard = ref(false)
+  const cardMsg = ref("")
   const position = ref({
     top: 0,
     left: 0
@@ -230,52 +209,6 @@
   var hasMove = ref(false)
   var selectionMsg: any
   var selection: any
-  //进行润色的函数
-  function polish(name: string){
-    console.log("@", name)
-        // ailoading.value=true
-        // visibleMenu.value = false;
-        // let formData = new FormData();
-        // formData.append("username","123456");
-        // formData.append("key","xxxxxxx");
-        // formData.append("cont",selectionMsg);
-        // let url = 'http://127.0.0.1:5000/getpolish' //访问后端接口的url
-        // let method = 'post'
-        // axios({
-        //   method,
-        //   url,
-        //   data: formData,
-        // }).then(res => {
-        //   console.log(res.data);
-        //   var tpcard1={"title":"ai辅助评审","cont":selectionMsg,"review":res.data}
-        //   ailist.value.push(tpcard1)
-        //   navigator.clipboard.writeText(res.data)
-        //   showMessage()
-        //   ailoading.value=false
-        // });
-    }
-  //进行aireview
-  // const continuation=()=>{
-  //   console.log("@")
-  //       // ailoading.value=true
-  //       // visibleMenu.value = false;
-  //       // let formData = new FormData();
-  //       // formData.append("username","123456");
-  //       // formData.append("key","xxxxxxx");
-  //       // formData.append("cont",selectionMsg);
-  //       // let url = 'http://127.0.0.1:5000/getpolish' //访问后端接口的url
-  //       // let method = 'post'
-  //       // axios({
-  //       //   method,
-  //       //   url,
-  //       //   data: formData,
-  //       // }).then(res => {
-  //       //   console.log(res.data);
-        
-  //       //   showMessage()
-  //       //   ailoading.value=false
-  //       // });
-  //   }
   // 获取选中的文字
   const selectText = (e: MouseEvent) => {
     selection = window.getSelection()
@@ -303,9 +236,10 @@
   //鼠标点击
   const notSee = () => {
     visibleMenu.value = false
+    visibleCard.value = false
     // selection.value=""
   }
-  const see = () => {
+  const seeMenu = () => {
     visibleMenu.value = true
     // selection.value=""
   }
@@ -313,6 +247,29 @@
   const hasScroll = () => {
     visibleMenu.value = false
     // window.getSelection().removeAllRanges()
+  }
+  const replace = () => {
+    const selection = editor.value?.state.selection
+    if (selection) { // 检查 selection 是否为 undefined
+      const { from, to } = selection
+      if (from !== to) { // 确保有选中的内容
+        editor.value?.chain().focus().deleteRange({ from, to }).insertContent(cardMsg.value).run()
+        visibleCard.value = false
+      }
+    } 
+  }
+  const append = () => {
+    const selection = editor.value?.state.selection
+    if (selection) { // 检查 selection 是否为 undefined
+      const { from, to } = selection
+      if (from !== to) { // 确保有选中的内容
+        editor.value?.chain().focus().insertContentAt(to, cardMsg.value).run()
+        visibleCard.value = false
+      }
+    } 
+  }
+  const ignore = () => {
+    visibleCard.value = false
   }
 </script>
 
@@ -359,7 +316,7 @@
   }
 
   .context-menu {
-    width: 120px;
+    width: 180px;
     margin: 0;
     background: #fff;
     z-index: 3000;
@@ -368,7 +325,7 @@
     padding:5px;
     padding-left: 15px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 400;
     color: #333;
     box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.3);
@@ -383,17 +340,14 @@
       color: rgb(29, 33, 41);
       cursor: pointer;
     }
-    .context-menu .item {
-      height: 35px;
-      width:100%;
-      line-height: 35px;
-      color: rgb(29, 33, 41);
-      cursor: pointer;
-    }
-
-    .context-menu .item:hover {
-      background: rgb(229, 230, 235);
-    }
+  .context-menu .item:hover {
+    background: rgb(229, 230, 235);
+  }
+  svg {
+    fill: currentColor;
+    height: 1.5rem;
+    width: 1.5rem;
+  }
 </style>
 
 <style lang="scss">
