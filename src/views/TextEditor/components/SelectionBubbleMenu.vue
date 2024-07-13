@@ -8,7 +8,7 @@
       }"
       v-if="editor"
     >
-      <button class="menu-item" :title="'人工智能'" ref="buttonRef" @click="showDataModal">
+      <button class="menu-item" :title="'人工智能'" ref="buttonRef" @click="show">
         <svg class="remix">
           <use :xlink:href="`${remixiconUrl}#ri-${'robot-2-line'}`" />
         </svg>
@@ -16,15 +16,7 @@
       <MenuGroup :title="''" :items="textHandleItems"/>
     </bubble-menu>
   </div>
-  <div class="custom-modal" v-if="dataModalVisible" :style="modalStyle">
-    <div class="modal-content">
-      <h3>获取数据</h3>
-      <!-- <button @click="getDataFromBackend('option1')">选项1</button>
-      <button @click="getDataFromBackend('option2')">选项2</button> -->
-      <!-- 其他获取数据的按钮 -->
-      <!-- <button class="close-button" @click="handleDataModalClose">关闭</button> -->
-    </div>
-  </div>
+
 </template>
 
 <script setup lang="ts" name="SelectionBubbleMenu">
@@ -32,26 +24,15 @@
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import { BubbleMenu, Editor } from '@tiptap/vue-3'
   import MenuGroup from './MenuGroup.vue'
-  const props = defineProps<{ editor: Editor }>()
-  let dataModalVisible = ref(false)
-  const buttonRef = ref<HTMLElement | null>(null);
+  const props = defineProps<{ editor: Editor, showDataModal: any }>()
   
-  const showDataModal = () => {
-    dataModalVisible.value = true;
-  };
-  const handleDataModalClose = () => {
-    dataModalVisible.value = false;
-  };
-  const modalStyle = computed(() => {
+  const buttonRef = ref()
+  function show(){
     if (buttonRef.value) {
-      const buttonRect = buttonRef.value.getBoundingClientRect();
-      return {
-        top: `${buttonRect.bottom}px`,
-        left: `${buttonRect.left}px`
-      };
+      const buttonRect = buttonRef.value.getBoundingClientRect()
+      props.showDataModal(buttonRect.bottom, buttonRect.left)
     }
-    return {};
-  });
+  }
   
   const textHandleItems = [
     {
@@ -104,15 +85,6 @@
   .container {
     position: relative;
     /* 确保容器内部的定位正确 */
-  }
-
-  .custom-modal {
-    position: fixed;
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 4px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 1000; /* 确保弹出框在最上层 */
   }
 /* Bubble menu */
   .bubble-menu {
