@@ -1,0 +1,41 @@
+{
+  "name": "editorfront",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tiptap/extension-bold": "^2.4.0",
+    "@tiptap/extension-bubble-menu": "^2.4.0",
+    "@tiptap/extension-code": "^2.4.0",
+    "@tiptap/extension-highlight": "^2.4.0",
+    "@tiptap/extension-italic": "^2.4.0",
+    "@tiptap/extension-subscript": "^2.4.0",
+    "@tiptap/extension-superscript": "^2.4.0",
+    "@tiptap/extension-underline": "^2.4.0",
+    "@tiptap/pm": "^2.4.0",
+    "@tiptap/starter-kit": "^2.4.0",
+    "@tiptap/vue-3": "^2.4.0",
+    "axios": "^1.7.2",
+    "element-plus": "^2.7.6",
+    "pinia": "^2.1.7",
+    "qs": "^6.12.2",
+    "remixicon": "^4.3.0",
+    "vue": "^3.4.29",
+    "vue-router": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "sass": "^1.77.6",
+    "sass-loader": "^14.2.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.1",
+    "vite-plugin-vue-setup-extend": "^0.4.0",
+    "vue-tsc": "^2.0.21"
+  }
+}
