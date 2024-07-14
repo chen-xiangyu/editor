@@ -2,10 +2,11 @@
   <el-container 
     style="height: 100vh; display: flex; flex-direction: column;" 
     ref="fileContRef" 
-    @mousedown="notSee()" 
+    @mousedown="notSee($event)" 
   >
     <ul 
       @mousedown="seeMenu()" 
+      ref="menuRef"
       v-show="visibleMenu" 
       :style="{ 
         left: position.left + 'px', 
@@ -23,6 +24,7 @@
     </ul>
     <el-card 
       v-show="visibleCard" 
+      ref="cardRef"
       :style="{ 
         'max-width': 480 + 'px',
         left: position.left + 'px', 
@@ -36,6 +38,29 @@
       <el-button type="success" @mousedown="append()">追加</el-button>
       <el-button type="info" @mousedown="ignore()">舍弃</el-button>
     </el-card>
+
+    <el-dialog
+      v-model="visibleUploadDialog"
+      title="上传文件"
+      width="50%"
+      @close="visibleUploadDialog = false"
+    >
+      <el-upload
+        class="upload-demo"
+        drag
+        :before-upload="beforeUpload"
+      >
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">
+          将文件放在此处或 <em>点击上传</em>
+        </div>
+        <template #tip>
+          <div class="el-upload__tip">
+          </div>
+        </template>
+      </el-upload>
+    </el-dialog>
+
     <el-header>
       <el-menu mode="horizontal" :ellipsis="false">
         <div class="flex-grow" />
@@ -53,12 +78,12 @@
         <Outline/>
       </el-aside>
       <el-main style="height: 100%;">
-        <Menu :editor="editor as Editor"/>
+        <Menu :editor="editor as Editor" :showUploadDialog="showUploadDialog"/>
         <!-- <SelectionBubbleMenu ref="bubbleRef" :editor="editor as Editor" :showDataModal="showDataModal" /> -->
         <editor-content 
           :editor="editor"
           @scroll="hasScroll()"
-          @mousedown="notSee()"
+          @mousedown="notSee($event)"
           @mousemove="mouseMove()" 
           @mouseup="selectText($event)" 
         />
@@ -76,10 +101,13 @@
   import Superscript from '@tiptap/extension-superscript'
   import Underline from '@tiptap/extension-underline'
   import Placeholder from '@tiptap/extension-placeholder'
+  import TaskItem from '@tiptap/extension-task-item'
+  import TaskList from '@tiptap/extension-task-list'
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
+  import { UploadFilled } from '@element-plus/icons-vue'
   import MenuGroup from './components/MenuGroup.vue'
   import axios from "axios"
-
+  import { ElMessage } from 'element-plus'
   import {RouterView,RouterLink,useRouter} from 'vue-router'
 
   const router = useRouter()
@@ -91,7 +119,7 @@
   import { useEditorStore } from '@/store'
   import { fa } from "element-plus/es/locales.mjs"
   const editorStore = useEditorStore()
-
+  // 编辑器
   const editor = useEditor({
     // content: "我正在使用 Vue.js 运行 Tiptap。",
     content: ``,
@@ -102,8 +130,12 @@
       Superscript,
       Underline,
       Placeholder.configure({
-            placeholder: '开始输入文本...'
-          }),
+        placeholder: '开始输入文本...'
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
     ],
     onUpdate({ editor }) {
       loadHeadings()
@@ -114,6 +146,7 @@
       editorStore.setEditorInstance(editor)
     },
   });
+  // 润色功能
   const AIList = reactive({
     'translate': {name: "翻译", icon: "translate"},
     'abstract': {name: "摘要", icon: "file-text-line"},
@@ -123,8 +156,118 @@
     'improve-write': {name: "改进写作", icon: "pencil-ruler-line"},
     'summarize': {name: "总结", icon: "book-2-fill"},
     'analysis': {name: "分析内容", icon: "bar-chart-fill"},
-  });
+  })
+  async function getAIMeaage(name: string){
+    try {
+      console.log("on mounted")
+      let data = {
+        question: selectionMsg
+      }
+      const response = await axios.post(
+        `/${name}/`,
+        JSON.stringify(data),
+      )
+      // accountError.value = response.data.error
+      let res = response.data
+      if (res.status){
+        console.log(res.answer)
+        cardMsg.value = res.answer
+        visibleCard.value = true
+      } else{
+        console.log(res.error)
+      }
+      console.log('POST 请求成功：', response.data)
+      
+    } catch (error) {
+      console.error('POST 请求失败：', error)
+      // throw error // 可选的抛出错误
+    }
+  }
 
+  const fileContRef = ref(null)
+  const visibleMenu = ref(false)
+  const visibleCard = ref(false)
+  const cardRef = ref()
+  const menuRef = ref()
+  const cardMsg = ref("")
+  const position = ref({
+    top: 0,
+    left: 0
+  })
+  var hasMove = ref(false)
+  var selectionMsg: any
+  var selection: any
+  // 获取选中的文字
+  const selectText = (e: MouseEvent) => {
+    selection = window.getSelection()
+    if(selection != null && selectionMsg != selection){
+      var content = selection.toString()
+      if(content != ""){
+          // var rect = fileContRef.value?.getBoundingClientRect()
+          visibleMenu.value = true
+          // alert(e.clientY)
+          // alert(e.clientX)
+          position.value.top =  e.clientY
+          position.value.left = e.clientX
+          selectionMsg = content
+        }
+      // alert(content)
+    }
+    else{
+      selectionMsg = ""
+    }
+  }
+  //鼠标移动
+  const mouseMove = () => {
+    hasMove.value = true
+  }
+  const isMouseNotInRect = (e: MouseEvent, rect: any) => {
+    const { clientX: x, clientY: y } = e
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      return true
+    } else return false
+  }
+
+  //鼠标点击
+  const notSee = (e: MouseEvent) => {
+    visibleMenu.value = false
+    // if (isMouseNotInRect(e, menuRef.value.$el.getBoundingClientRect())) visibleMenu.value = false
+    if (isMouseNotInRect(e, cardRef.value.$el.getBoundingClientRect())) visibleCard.value = false
+  }
+  const seeMenu = () => {
+    visibleMenu.value = true
+    // selection.value=""
+  }
+  //滚轮滚动
+  const hasScroll = () => {
+    visibleMenu.value = false
+    // window.getSelection().removeAllRanges()
+  }
+  const replace = () => {
+    const selection = editor.value?.state.selection
+    if (selection) { // 检查 selection 是否为 undefined
+      const { from, to } = selection
+      if (from !== to) { // 确保有选中的内容
+        editor.value?.chain().focus().deleteRange({ from, to }).insertContent(cardMsg.value).run()
+        visibleCard.value = false
+      }
+    } 
+  }
+  const append = () => {
+    const selection = editor.value?.state.selection
+    if (selection) { // 检查 selection 是否为 undefined
+      const { from, to } = selection
+      if (from !== to) { // 确保有选中的内容
+        editor.value?.chain().focus().insertContentAt(to, cardMsg.value).run()
+        visibleCard.value = false
+      }
+    } 
+  }
+  const ignore = () => {
+    visibleCard.value = false
+  }
+
+    // 获取标题（大纲）
   const loadHeadings = () => {
     const headings = [] as any[]
     if (!editor.value) return
@@ -169,108 +312,45 @@
     })
   }
 
-  async function getAIMeaage(name: string)
-  {
+  const visibleUploadDialog = ref(false)
+  const uploadUrl = ref("")
+  const showUploadDialog = (param: string) => {
+    visibleUploadDialog.value = true
+    console.log(param)
+    uploadUrl.value = param
+  }
+  const beforeUpload = async (file: any) => {
+    ElMessage({
+      message: '成功上传文件',
+      type: 'success',
+      plain: true,
+    })
+    visibleUploadDialog.value = false
     try {
       console.log("on mounted")
-      let data = {
-        question: selectionMsg
-      }
+      const formData = new FormData()
+      formData.append('file', file)
       const response = await axios.post(
-        `/${name}/`,
-        JSON.stringify(data),
+        `/${uploadUrl.value}/`,
+        formData,
       )
-      // accountError.value = response.data.error
       let res = response.data
+      console.log(res)
       if (res.status){
-        console.log(res.answer)
-        cardMsg.value = res.answer
-        visibleCard.value = true
+        // console.log(res.answer)
+        // cardMsg.value = res.answer
+        // visibleCard.value = true
       } else{
         console.log(res.error)
       }
       console.log('POST 请求成功：', response.data)
-      
     } catch (error) {
       console.error('POST 请求失败：', error)
-      // throw error // 可选的抛出错误
     }
+    return false;
+  }
 
-  }
 
-  const fileContRef = ref(null)
-  const visibleMenu = ref(false)
-  const visibleCard = ref(false)
-  const cardMsg = ref("")
-  const position = ref({
-    top: 0,
-    left: 0
-  })
-  var hasMove = ref(false)
-  var selectionMsg: any
-  var selection: any
-  // 获取选中的文字
-  const selectText = (e: MouseEvent) => {
-    selection = window.getSelection()
-    if(selection != null && selectionMsg != selection){
-      var content = selection.toString()
-      if(content != ""){
-          // var rect = fileContRef.value?.getBoundingClientRect()
-          visibleMenu.value = true
-          // alert(e.clientY)
-          // alert(e.clientX)
-          position.value.top =  e.clientY
-          position.value.left = e.clientX
-          selectionMsg = content
-        }
-      // alert(content)
-    }
-    else{
-      selectionMsg = ""
-    }
-  }
-  //鼠标移动
-  const mouseMove = () => {
-    hasMove.value = true
-  }
-  //鼠标点击
-  const notSee = () => {
-    visibleMenu.value = false
-    visibleCard.value = false
-    // selection.value=""
-  }
-  const seeMenu = () => {
-    visibleMenu.value = true
-    // selection.value=""
-  }
-  //滚轮滚动
-  const hasScroll = () => {
-    visibleMenu.value = false
-    // window.getSelection().removeAllRanges()
-  }
-  const replace = () => {
-    const selection = editor.value?.state.selection
-    if (selection) { // 检查 selection 是否为 undefined
-      const { from, to } = selection
-      if (from !== to) { // 确保有选中的内容
-        editor.value?.chain().focus().deleteRange({ from, to }).insertContent(cardMsg.value).run()
-        visibleCard.value = false
-      }
-    } 
-  }
-  const append = () => {
-    const selection = editor.value?.state.selection
-    if (selection) { // 检查 selection 是否为 undefined
-      const { from, to } = selection
-      if (from !== to) { // 确保有选中的内容
-        editor.value?.chain().focus().insertContentAt(to, cardMsg.value).run()
-        visibleCard.value = false
-      }
-    } 
-  }
-  const ignore = () => {
-    visibleCard.value = false
-  }
 </script>
 
 <style lang="scss" scoped>
@@ -549,5 +629,34 @@ b {
   cursor: ew-resize;
   cursor: col-resize;
 }
+ul[data-type="taskList"] {
+    list-style: none;
+    margin-left: 0;
+    padding: 0;
+
+    li {
+      align-items: flex-start;
+      display: flex;
+
+      > label {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+        user-select: none;
+      }
+
+      > div {
+        flex: 1 1 auto;
+      }
+    }
+
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    ul[data-type="taskList"] {
+      margin: 0;
+    }
+  }
+
 </style>
 
