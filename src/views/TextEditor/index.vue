@@ -25,17 +25,16 @@
     <el-card 
       v-show="visibleCard" 
       ref="cardRef"
-      :style="{ 
-        'max-width': 480 + 'px',
-        left: position.left + 'px', 
-        top: position.top + 'px', 
-        display: (visibleCard ? 'grid' : 'none'),
-        position: 'absolute',
-      }" 
+      :style="cardStyle" 
     >
       <p>{{ cardMsg }}</p>
-      <el-button type="primary" @mousedown="replace()">替换</el-button>
-      <el-button type="success" @mousedown="append()">追加</el-button>
+      <template v-if="isMultiMedia">
+        <el-button type="primary" @mousedown="copyText()">复制</el-button>
+      </template>
+      <template v-else>
+        <el-button type="primary" @mousedown="replace()">替换</el-button>
+        <el-button type="success" @mousedown="append()">追加</el-button>
+      </template>
       <el-button type="info" @mousedown="ignore()">舍弃</el-button>
     </el-card>
 
@@ -93,7 +92,7 @@
 </template>
 
 <script setup lang="ts" name="TextEditor">
-  import { ref, reactive } from "vue"
+  import { ref, reactive, computed } from "vue"
   import { useEditor, EditorContent, Editor } from "@tiptap/vue-3"
   import StarterKit from '@tiptap/starter-kit'
   import Highlight from '@tiptap/extension-highlight'
@@ -172,6 +171,7 @@
       if (res.status){
         console.log(res.answer)
         cardMsg.value = res.answer
+        isMultiMedia.value = false
         visibleCard.value = true
       } else{
         console.log(res.error)
@@ -266,6 +266,20 @@
   const ignore = () => {
     visibleCard.value = false
   }
+  const copyText = async () => {
+    try {
+      await navigator.clipboard.writeText(cardMsg.value)
+      ElMessage({
+        message: '已成功复制到粘贴板',
+        type: 'success',
+        plain: true,
+      })
+      visibleCard.value = false
+      console.log('文本已复制到剪贴板')
+    } catch (err) {
+      console.error('复制失败:', err)
+    }
+  }
 
     // 获取标题（大纲）
   const loadHeadings = () => {
@@ -314,6 +328,7 @@
 
   const visibleUploadDialog = ref(false)
   const uploadUrl = ref("")
+  const isMultiMedia = ref(false)
   const showUploadDialog = (param: string) => {
     visibleUploadDialog.value = true
     console.log(param)
@@ -338,8 +353,9 @@
       console.log(res)
       if (res.status){
         // console.log(res.answer)
-        // cardMsg.value = res.answer
-        // visibleCard.value = true
+        cardMsg.value = res.answer
+        isMultiMedia.value = true
+        visibleCard.value = true
       } else{
         console.log(res.error)
       }
@@ -350,7 +366,28 @@
     return false;
   }
 
-
+  const cardStyle = computed(() => {
+    if (isMultiMedia.value) {
+      return {
+        maxWidth: '480px',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        display: visibleCard.value ? 'grid' : 'none',
+        position: 'absolute',
+        zIndex: 1000,
+      };
+    } else {
+      return {
+        maxWidth: '480px',
+        left: `${position.value.left}px`,
+        top: `${position.value.top}px`,
+        display: visibleCard.value ? 'grid' : 'none',
+        position: 'absolute',
+        zIndex: 1000,
+      };
+    }
+  });
 </script>
 
 <style lang="scss" scoped>
