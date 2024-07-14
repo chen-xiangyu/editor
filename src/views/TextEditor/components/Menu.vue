@@ -39,7 +39,7 @@
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import MenuGroup from './MenuGroup.vue'
 
-  const props = defineProps<{ editor: Editor, showUploadDialog: Function }>()
+  const props = defineProps<{ editor: Editor, showUploadDialog: Function, showVoiceInput: Function }>()
 
   const textHandleItems = [
     {
@@ -177,6 +177,18 @@
       title: "OCR识别",
       action: props.showUploadDialog,
       url: "ocr",
+    },
+    {
+      icon: "mic-line",
+      title: "语音识别",
+      action: props.showVoiceInput,
+      url: "voice-recognise",
+    },
+    {
+      icon: "video-line",
+      title: "视频内容识别",
+      action: props.showUploadDialog,
+      url: "video-recognise",
     }
   ]
 </script>

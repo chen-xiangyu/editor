@@ -60,6 +60,15 @@
       </el-upload>
     </el-dialog>
 
+    <el-dialog
+      v-model="visibleVoiceInput"
+      title="语音识别"
+      width="50%"
+      @close="visibleVoiceInput = false"
+    >
+      <VoiceInput :getVoiceResult="getVoiceResult"></VoiceInput>
+    </el-dialog>
+
     <el-header>
       <el-menu mode="horizontal" :ellipsis="false">
         <div class="flex-grow" />
@@ -77,7 +86,11 @@
         <Outline/>
       </el-aside>
       <el-main style="height: 100%;">
-        <Menu :editor="editor as Editor" :showUploadDialog="showUploadDialog"/>
+        <Menu 
+          :editor="editor as Editor" 
+          :showUploadDialog="showUploadDialog"
+          :showVoiceInput="showVoiceInput"
+        />
         <!-- <SelectionBubbleMenu ref="bubbleRef" :editor="editor as Editor" :showDataModal="showDataModal" /> -->
         <editor-content 
           :editor="editor"
@@ -114,6 +127,7 @@
   import Menu from "./components/Menu.vue"
   import Outline from "./components/Outline.vue"
   import SelectionBubbleMenu from "./components/SelectionBubbleMenu.vue"
+  import VoiceInput from "./components/VoiceInput.vue"
 
   import { useEditorStore } from '@/store'
   import { fa } from "element-plus/es/locales.mjs"
@@ -365,6 +379,19 @@
     }
     return false;
   }
+  // 语音识别
+  const visibleVoiceInput = ref(false)
+  const showVoiceInput = (param: string) => {
+    visibleVoiceInput.value = true
+    uploadUrl.value = param
+  }
+  const getVoiceResult = (param: string) => {
+    visibleVoiceInput.value = false
+    cardMsg.value = param
+    isMultiMedia.value = true
+    visibleCard.value = true
+  }
+
 
   const cardStyle = computed(() => {
     if (isMultiMedia.value) {
@@ -387,7 +414,7 @@
         zIndex: 1000,
       };
     }
-  });
+  })
 </script>
 
 <style lang="scss" scoped>
