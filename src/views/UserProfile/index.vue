@@ -228,9 +228,9 @@
     flex: 1; /* 输入框自动填充剩余空间 */
     margin-right: 10px; /* 可选：增加右侧间距 */
   }
-  svg {
+  .remix {
     fill: currentColor;
-    height: 1.5rem;
     width: 1.5rem;
+    height: 1.5rem;
   }
 </style>

@@ -16,9 +16,9 @@
     >
       <div v-for="(value, key) in AIList" :key="key" class="item"  @mousedown="getAIMeaage(key)">
         <svg class="remix">
-          <use :xlink:href="`${remixiconUrl}#ri-${'arrow-right-s-line'}`" />
+          <use :xlink:href="`${remixiconUrl}#ri-${value.icon}`" />
         </svg>
-        {{ value }}
+        <span class="item-text">{{ value.name }}</span>
       </div>
     </ul>
     <el-card 
@@ -115,14 +115,14 @@
     },
   });
   const AIList = reactive({
-    'translate': "翻译",
-    'abstract': "摘要",
-    'decorate': "修饰",
-    'continue-write': "续写",
-    'rewrite': "病句改写",
-    'improve-write': "改进写作",
-    'summarize': "总结",
-    'analysis': "分析内容",
+    'translate': {name: "翻译", icon: "translate"},
+    'abstract': {name: "摘要", icon: "file-text-line"},
+    'decorate': {name: "修饰", icon: "magic-line"},
+    'continue-write': {name: "续写", icon: "edit-2-line"},
+    'rewrite': {name: "病句改写", icon: "refresh-line"},
+    'improve-write': {name: "改进写作", icon: "pencil-ruler-line"},
+    'summarize': {name: "总结", icon: "book-2-fill"},
+    'analysis': {name: "分析内容", icon: "bar-chart-fill"},
   });
 
   const loadHeadings = () => {
@@ -316,37 +316,49 @@
   }
 
   .context-menu {
-    width: 180px;
+    width: 240px; /* 调整宽度以适应两列布局 */
     margin: 0;
     background: #fff;
     z-index: 3000;
     position: absolute;
     list-style-type: none;
-    padding:5px;
-    padding-left: 15px;
-    border-radius: 4px;
+    padding: 5px; /* 调整填充 */
+    border-radius: 6px; /* 增加圆角 */
     font-size: 16px;
     font-weight: 400;
     color: #333;
-    box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 优化阴影 */
     display: grid;
-    grid-template-columns:50% 50%;
-
+    grid-template-columns: 1fr 1fr; /* 两列布局 */
+    gap: 10px; /* 增加项之间的间距 */
   }
+
   .context-menu .item {
-      height: 35px;
-      width:100%;
-      line-height: 35px;
-      color: rgb(29, 33, 41);
-      cursor: pointer;
-    }
+    height: 40px; /* 增加高度 */
+    display: flex; /* 使用弹性布局 */
+    align-items: center; /* 垂直居中 */
+    padding: 0 10px; /* 增加内边距 */
+    color: rgb(29, 33, 41);
+    cursor: pointer;
+    border-radius: 4px; /* 增加圆角 */
+    background-color: #f9f9f9; /* 添加背景色 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+  }
+
+  .context-menu .item-text {
+    flex: 1; /* 占据剩余空间，使文本左对齐 */
+    text-align: left; /* 确保文本左对齐 */
+  }
+
   .context-menu .item:hover {
     background: rgb(229, 230, 235);
   }
-  svg {
+
+  .remix {
     fill: currentColor;
-    height: 1.5rem;
     width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 5px; /* 增加与文本的间距 */
   }
 </style>
 
