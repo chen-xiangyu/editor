@@ -39,20 +39,25 @@
           </el-tooltip>
         </template>
       </el-row>
+      <input ref="imageFileInput" type="file" accept="image/jpeg, image/png, image/gif" style="display: none" @change="handleImageFile">
     </div>
   </div>
 </template>
 
 <script setup lang="ts" name="Menu">
+  import { ref } from "vue"
   import { Editor } from '@tiptap/vue-3'
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import MenuGroup from './MenuGroup.vue'
+
+  const imageFileInput = ref()
 
   const props = defineProps<{ 
     editor: Editor, 
     showUploadDialog: Function, 
     showVoiceInput: Function,
-    showTextInput: Function
+    showTextInput: Function,
+    addImageByBase64: Function,
   }>()
 
   const textHandleItems = [
@@ -201,6 +206,22 @@
       action: () => props.editor?.chain().focus().toggleTaskList().run(),
       isActive: () => props.editor?.isActive('taskList')
     },
+    {
+      icon: 'image-line',
+      title: '图片',
+      action: () => imageFileInput.value.click()
+    },
+    {
+      icon: 'video-line',
+      title: '视频',
+      action: () => {
+        const url = prompt('Enter YouTube URL') as string
+
+        props.editor.commands.setYoutubeVideo({
+          src: url,
+        })
+      }
+    },
   ]
 
   const AIItems = [
@@ -221,7 +242,7 @@
       }
     },
     {
-      icon: "video-line",
+      icon: "video-upload-line",
       title: "视频内容识别",
       action: props.showUploadDialog,
       params: {
@@ -249,6 +270,29 @@
       }
     },
   ]
+
+  const handleImageFile = (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+
+    const file = input.files[0]
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+    if (!allowedTypes.includes(file.type)) {
+      alert('请选择 JPEG, PNG 或 GIF 格式的图片。')
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      const result = reader.result as string
+      props.addImageByBase64(result, file.name, file.type)
+    }
+
+    if (file) {
+      reader.readAsDataURL(file)
+    }
+  }
 </script>
 
 <style lang="scss" scoped>

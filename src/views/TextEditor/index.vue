@@ -117,6 +117,7 @@
           :showUploadDialog="showUploadDialog"
           :showVoiceInput="showVoiceInput"
           :showTextInput="showTextInput"
+          :addImageByBase64="addImageByBase64"
         />
         <!-- <SelectionBubbleMenu ref="bubbleRef" :editor="editor as Editor" :showDataModal="showDataModal" /> -->
         <editor-content 
@@ -125,6 +126,7 @@
           @mousedown="notSee($event)"
           @mousemove="mouseMove()" 
           @mouseup="selectText($event)" 
+          @paste="handlePaste"
         />
       </el-main>
     </el-container>
@@ -143,15 +145,16 @@
   import TaskItem from '@tiptap/extension-task-item'
   import TaskList from '@tiptap/extension-task-list'
   import Blockquote from '@tiptap/extension-blockquote'
+  import Image from '@tiptap/extension-image'
+  import Youtube from '@tiptap/extension-youtube'
+  import { Markdown } from 'tiptap-markdown'
 
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import { UploadFilled } from '@element-plus/icons-vue'
   import MenuGroup from './components/MenuGroup.vue'
   import axios from "axios"
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, formContextKey } from 'element-plus'
   import {RouterView,RouterLink,useRouter} from 'vue-router'
-
-  import MarkdownIt from 'markdown-it'
 
   import Menu from "./components/Menu.vue"
   import Outline from "./components/Outline.vue"
@@ -160,9 +163,9 @@
 
   import { useEditorStore } from '@/store'
   import { fa } from "element-plus/es/locales.mjs"
+import { handlePaste } from "@tiptap/pm/tables"
 
   const router = useRouter()
-  const markdown = new MarkdownIt()
   const editorStore = useEditorStore()
   // 编辑器
   const editor = useEditor({
@@ -181,22 +184,52 @@
       TaskItem.configure({
         nested: true,
       }),
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+      }),
+      Youtube.configure({
+        inline: false,
+        controls: true,
+        nocookie: true,
+        width: 480,
+        height: 320,
+      }),
+      Markdown,
 
-      Blockquote.configure({
-        HTMLAttributes: {
-          class: "my-blockquote",
-        },
-      })
+      // Blockquote.configure({
+      //   HTMLAttributes: {
+      //     class: "my-blockquote",
+      //   },
+      // })
     ],
     onUpdate({ editor }) {
       loadHeadings()
       editorStore.setEditorInstance(editor)
+      // const selectionTmp = editor.state.selection
+      // if (selectionTmp) {
+      //   const { from, to} = selectionTmp
+      //   oldContent = newContent
+      //   newContent= editor.getText() || ''
+      //   selectionStr.from = oldContent.slice(0, from - 1)
+      //   selectionStr.to = oldContent.slice(to - 1)
+      //   console.log("update", selectionStr.from, selectionStr.to)
+      // }
     },
     onCreate({ editor }) {
       loadHeadings()
       editorStore.setEditorInstance(editor)
     },
   });
+  // 监听粘贴事件
+  const handlePaste = (event: ClipboardEvent) => {
+    event.preventDefault()
+    // 获取粘贴内容
+    const clipboardData: DataTransfer | null = event.clipboardData
+    const pastedData: string = clipboardData ? clipboardData.getData('text') : ''
+
+    editor.value?.commands.setContent(`${selectionStr.from}\n\n${pastedData}\n\n${selectionStr.to}`, true)
+  }
 
   // 润色功能
   const AIList = reactive({
@@ -252,8 +285,19 @@
   var hasMove = ref(false)
   var selectionMsg: any
   var selection: any
+  var selectionStr = {from: "", to: ""}
+  var oldContent = ""
+  var newContent = ""
   // 获取选中的文字
   const selectText = (e: MouseEvent) => {
+    const selectionTmp = editor.value?.state.selection
+    if (selectionTmp) {
+      const { from, to} = selectionTmp
+      const currentContent = editor.value?.getText() || ''
+      selectionStr.from = currentContent.slice(0, from - 1)
+      selectionStr.to = currentContent.slice(to - 1)
+      // console.log("in selectText", selectionStr.from, selectionStr.to)
+    }
     selection = window.getSelection()
     if(selection != null && selectionMsg != selection){
       var content = selection.toString()
@@ -506,6 +550,15 @@
       console.error('POST 请求失败：', error)
       // throw error // 可选的抛出错误
     }
+  }
+
+  const addImageByBase64 = (base64String: string, fileName: string, fileType: string) => {
+    const base64Src = `data:${fileType};base64,${base64String.split(',')[1]}`
+    editor.value?.commands.setImage({
+      src: base64Src,
+      alt: fileName,
+      title: fileName,
+    })
   }
 </script>
 
