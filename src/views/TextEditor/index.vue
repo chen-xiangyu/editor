@@ -27,7 +27,14 @@
       ref="cardRef"
       :style="cardStyle" 
     >
-      <p>{{ cardMsg }}</p>
+      <!-- <p>{{ cardMsg }}</p> -->
+      <el-input
+        v-model="cardMsg"
+
+        :autosize="{ minRows: 1, maxRows: 16 }"
+        type="textarea"
+        :placeholder="textPrompt"
+      />
       <template v-if="isMultiMedia">
         <el-button type="primary" @mousedown="copyText()">复制</el-button>
       </template>
@@ -69,6 +76,25 @@
       <VoiceInput :getVoiceResult="getVoiceResult"></VoiceInput>
     </el-dialog>
 
+    <el-dialog
+      v-model="visibleTextInput"
+      :title="textTitle"
+      width="50%"
+      @close="visibleTextInput = false"
+    >
+      <el-input
+        v-model="textInput"
+        style="width: 100%"
+        :autosize="{ minRows: 10, maxRows: 16 }"
+        type="textarea"
+        :placeholder="textPrompt"
+      />
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @mousedown="getAIDocument">开始生成</el-button>
+      </div>
+      
+    </el-dialog>
+
     <el-header>
       <el-menu mode="horizontal" :ellipsis="false">
         <div class="flex-grow" />
@@ -90,6 +116,7 @@
           :editor="editor as Editor" 
           :showUploadDialog="showUploadDialog"
           :showVoiceInput="showVoiceInput"
+          :showTextInput="showTextInput"
         />
         <!-- <SelectionBubbleMenu ref="bubbleRef" :editor="editor as Editor" :showDataModal="showDataModal" /> -->
         <editor-content 
@@ -115,6 +142,8 @@
   import Placeholder from '@tiptap/extension-placeholder'
   import TaskItem from '@tiptap/extension-task-item'
   import TaskList from '@tiptap/extension-task-list'
+  import Blockquote from '@tiptap/extension-blockquote'
+
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import { UploadFilled } from '@element-plus/icons-vue'
   import MenuGroup from './components/MenuGroup.vue'
@@ -122,7 +151,7 @@
   import { ElMessage } from 'element-plus'
   import {RouterView,RouterLink,useRouter} from 'vue-router'
 
-  const router = useRouter()
+  import MarkdownIt from 'markdown-it'
 
   import Menu from "./components/Menu.vue"
   import Outline from "./components/Outline.vue"
@@ -131,6 +160,9 @@
 
   import { useEditorStore } from '@/store'
   import { fa } from "element-plus/es/locales.mjs"
+
+  const router = useRouter()
+  const markdown = new MarkdownIt()
   const editorStore = useEditorStore()
   // 编辑器
   const editor = useEditor({
@@ -149,6 +181,12 @@
       TaskItem.configure({
         nested: true,
       }),
+
+      Blockquote.configure({
+        HTMLAttributes: {
+          class: "my-blockquote",
+        },
+      })
     ],
     onUpdate({ editor }) {
       loadHeadings()
@@ -159,6 +197,7 @@
       editorStore.setEditorInstance(editor)
     },
   });
+
   // 润色功能
   const AIList = reactive({
     'translate': {name: "翻译", icon: "translate"},
@@ -173,12 +212,14 @@
   async function getAIMeaage(name: string){
     try {
       console.log("on mounted")
-      let data = {
-        question: selectionMsg
-      }
+      const formData = new FormData()
+      formData.append('question', selectionMsg)
+      // let data = {
+      //   question: selectionMsg
+      // }
       const response = await axios.post(
         `/${name}/`,
-        JSON.stringify(data),
+        formData,
       )
       // accountError.value = response.data.error
       let res = response.data
@@ -343,10 +384,9 @@
   const visibleUploadDialog = ref(false)
   const uploadUrl = ref("")
   const isMultiMedia = ref(false)
-  const showUploadDialog = (param: string) => {
+  const showUploadDialog = (params: any) => {
     visibleUploadDialog.value = true
-    console.log(param)
-    uploadUrl.value = param
+    uploadUrl.value = params.url
   }
   const beforeUpload = async (file: any) => {
     ElMessage({
@@ -381,9 +421,9 @@
   }
   // 语音识别
   const visibleVoiceInput = ref(false)
-  const showVoiceInput = (param: string) => {
+  const showVoiceInput = (params: any) => {
     visibleVoiceInput.value = true
-    uploadUrl.value = param
+    uploadUrl.value = params.url
   }
   const getVoiceResult = (param: string) => {
     visibleVoiceInput.value = false
@@ -396,7 +436,7 @@
   const cardStyle = computed(() => {
     if (isMultiMedia.value) {
       return {
-        maxWidth: '480px',
+        maxWidth: '680px',
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
@@ -406,7 +446,7 @@
       };
     } else {
       return {
-        maxWidth: '480px',
+        maxWidth: '680px',
         left: `${position.value.left}px`,
         top: `${position.value.top}px`,
         display: visibleCard.value ? 'grid' : 'none',
@@ -415,9 +455,66 @@
       };
     }
   })
+
+  // 文档撰写
+  const visibleTextInput = ref(false)
+  const textInput = ref("")
+  const textPrompt = ref("")
+  const textTitle = ref("")
+  const showTextInput = (params: any) => {
+    visibleTextInput.value = true
+    uploadUrl.value = params.url
+    textPrompt.value = params.prompt
+    textTitle.value = params.title
+  }
+  const getAIDocument = async () => {
+    if (!textInput.value) {
+      ElMessage({
+        message: '内容不能为空',
+        type: 'error',
+        plain: true,
+      })
+      return ;
+    }
+    visibleTextInput.value = false
+    ElMessage({
+      message: '成功发送',
+      type: 'success',
+      plain: true,
+    })
+    try {
+      console.log("on mounted")
+      const formData = new FormData()
+      formData.append('question', textInput.value)
+      const response = await axios.post(
+        `/${uploadUrl.value}/`,
+        formData,
+      )
+      // accountError.value = response.data.error
+      let res = response.data
+      if (res.status){
+        // console.log(res)
+        cardMsg.value = res.answer
+        isMultiMedia.value = true
+        visibleCard.value = true
+      } else{
+        console.log(res.error)
+      }
+      console.log('POST 请求成功：', response.data)
+      
+    } catch (error) {
+      console.error('POST 请求失败：', error)
+      // throw error // 可选的抛出错误
+    }
+  }
 </script>
 
 <style lang="scss" scoped>
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
   .custom-modal {
     position: fixed;
     width: 500px;
@@ -721,6 +818,10 @@ ul[data-type="taskList"] {
       margin: 0;
     }
   }
-
+  .my-blockquote {
+    border-left: 3px solid var(--gray-3);
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+  }
 </style>
 

@@ -1,14 +1,23 @@
 <template>
-  <button
-    class="menu-item"
-    :class="{ 'is-active': item.isActive ? item.isActive() : null }"
-    @click="item.action"
-    :title="item.title"
-    >
-    <svg class="remix">
-      <use :xlink:href="`${remixiconUrl}#ri-${item.icon}`" />
-    </svg>
-  </button>
+  <el-tooltip
+    class="box-item"
+    effect="dark"
+    :content="item.title"
+    placement="top"
+    hide-after="10"
+  >
+    <button
+      class="menu-item"
+      :class="{ 'is-active': item.isActive ? item.isActive() : null }"
+      @click="item.action"
+      :title="item.title"
+      >
+      <svg class="remix">
+        <use :xlink:href="`${remixiconUrl}#ri-${item.icon}`" />
+      </svg>
+    </button>
+  </el-tooltip>
+
 </template>
 
 <script setup lang="ts" name="MenuItem">

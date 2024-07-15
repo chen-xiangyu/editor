@@ -20,15 +20,24 @@
       </el-row>
       <el-row>
         <span class="title">AI助手：</span>
-        <button v-for="item in AIItems"
-          class="menu-item"
-          @click="item.action(item.url)"
-          :title="item.title"
+        <template v-for="item in AIItems">
+          <el-tooltip
+            class="box-item"
+            effect="dark"
+            :content="item.title"
+            placement="top"
+            hide-after="10"
           >
-          <svg class="remix">
-            <use :xlink:href="`${remixiconUrl}#ri-${item.icon}`" />
-          </svg>
-        </button>
+            <button 
+              class="menu-item"
+              @click="item.action(item.params)"
+              >
+              <svg class="remix">
+                <use :xlink:href="`${remixiconUrl}#ri-${item.icon}`" />
+              </svg>
+            </button>
+          </el-tooltip>
+        </template>
       </el-row>
     </div>
   </div>
@@ -39,59 +48,82 @@
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import MenuGroup from './MenuGroup.vue'
 
-  const props = defineProps<{ editor: Editor, showUploadDialog: Function, showVoiceInput: Function }>()
+  const props = defineProps<{ 
+    editor: Editor, 
+    showUploadDialog: Function, 
+    showVoiceInput: Function,
+    showTextInput: Function
+  }>()
 
   const textHandleItems = [
     {
       icon: 'bold',
-      title: 'Bold',
+      title: '加粗',
       action: () => props.editor?.chain().focus().toggleBold().run(),
       isActive: () => props.editor?.isActive('bold')
     },
     {
       icon: 'italic',
-      title: 'Italic',
+      title: '斜体',
       action: () => props.editor?.chain().focus().toggleItalic().run(),
       isActive: () => props.editor?.isActive('italic')
     },
     {
       icon: 'strikethrough',
-      title: 'Strike',
+      title: '删除线',
       action: () => props.editor?.chain().focus().toggleStrike().run(),
       isActive: () => props.editor?.isActive('strike')
     },
     {
       icon: 'code-view',
-      title: 'Code',
+      title: '代码',
       action: () => props.editor?.chain().focus().toggleCode().run(),
       isActive: () => props.editor?.isActive('code')
     },
     {
+      icon: 'code-block',
+      title: '代码块',
+      action: () => props.editor?.chain().focus().toggleCodeBlock().run(),
+      isActive: () => props.editor?.isActive('codeBlock')
+    },
+    {
       icon: 'subscript',
-      title: 'Subscript',
+      title: '上标',
       action: () => props.editor?.chain().focus().toggleSubscript().run(),
       isActive: () => props.editor?.isActive('subscript')
     },
     {
       icon: 'superscript',
-      title: 'Superscript',
+      title: '下标',
       action: () => props.editor?.chain().focus().toggleSuperscript().run(),
       isActive: () => props.editor?.isActive('superscript')
     },
     {
       icon: 'underline',
-      title: 'Underline',
+      title: '下划线',
       action: () => props.editor?.chain().focus().toggleUnderline().run(),
       isActive: () => props.editor?.isActive('underline')
     },
     {
+      icon: 'separator',
+      title: '分割线',
+      action: () => props.editor?.chain().focus().setHorizontalRule().run(),
+      // isActive: () => props.editor?.isActive('underline')
+    },
+    {
+      icon: 'chat-quote-line',
+      title: '引用块',
+      action: () => props.editor?.chain().focus().toggleBlockquote().run(),
+      isActive: () => props.editor?.isActive('blockquote')
+    },
+    {
       icon: 'arrow-go-back-line',
-      title: 'Undo',
+      title: '撤销',
       action: () => props.editor?.chain().focus().undo().run()
     },
     {
       icon: 'arrow-go-forward-line',
-      title: 'Redo',
+      title: '重做',
       action: () => props.editor?.chain().focus().redo().run()
     }
   ]
@@ -99,7 +131,7 @@
   const highlightItems = [
     {
       icon: 'mark-pen-line',
-      title: 'Highlight',
+      title: '高亮',
       action: () => props.editor?.chain().focus().toggleHighlight().run(),
       isActive: () => props.editor?.isActive('highlight')
     },
@@ -114,37 +146,37 @@
   const headerItems = [
     {
       icon: 'h-1',
-      title: 'Heading 1',
+      title: '一级标题',
       action: () => props.editor?.chain().focus().toggleHeading({ level: 1 }).run(),
       isActive: () => props.editor?.isActive('heading', { level: 1 })
     },
     {
       icon: 'h-2',
-      title: 'Heading 2',
+      title: '二级标题',
       action: () => props.editor?.chain().focus().toggleHeading({ level: 2 }).run(),
       isActive: () => props.editor?.isActive('heading', { level: 2 })
     },
     {
       icon: 'h-3',
-      title: 'Heading 3',
+      title: '三级标题',
       action: () => props.editor?.chain().focus().toggleHeading({ level: 3 }).run(),
       isActive: () => props.editor?.isActive('heading', { level: 3 })
     },
     {
       icon: 'h-4',
-      title: 'Heading 4',
+      title: '四级标题',
       action: () => props.editor?.chain().focus().toggleHeading({ level: 4 }).run(),
       isActive: () => props.editor?.isActive('heading', { level: 4})
     },
     {
       icon: 'h-5',
-      title: 'Heading 5',
+      title: '五级标题',
       action: () => props.editor?.chain().focus().toggleHeading({ level: 5 }).run(),
       isActive: () => props.editor?.isActive('heading', { level: 5})
     },
     {
       icon: 'h-6',
-      title: 'Heading 6',
+      title: '六级标题',
       action: () => props.editor?.chain().focus().toggleHeading({ level: 6 }).run(),
       isActive: () => props.editor?.isActive('heading', { level: 6})
     },
@@ -153,19 +185,19 @@
   const commonFunctionItems = [
     {
       icon: 'list-unordered',
-      title: 'Bullet List',
+      title: '无序列表',
       action: () => props.editor?.chain().focus().toggleBulletList().run(),
       isActive: () => props.editor?.isActive('bulletList')
     },
     {
       icon: 'list-ordered',
-      title: 'Ordered List',
+      title: '有序列表',
       action: () => props.editor?.chain().focus().toggleOrderedList().run(),
       isActive: () => props.editor?.isActive('orderedList')
     },
     {
       icon: 'list-check-2',
-      title: 'Task List',
+      title: '任务列表',
       action: () => props.editor?.chain().focus().toggleTaskList().run(),
       isActive: () => props.editor?.isActive('taskList')
     },
@@ -176,20 +208,46 @@
       icon: "character-recognition-line",
       title: "OCR识别",
       action: props.showUploadDialog,
-      url: "ocr",
+      parmas: {
+        url: "ocr",
+      }
     },
     {
       icon: "mic-line",
       title: "语音识别",
       action: props.showVoiceInput,
-      url: "voice-recognise",
+      params: {
+        url: "voice-recognise",
+      }
     },
     {
       icon: "video-line",
       title: "视频内容识别",
       action: props.showUploadDialog,
-      url: "video-recognise",
-    }
+      params: {
+        url: "video-recognise",
+      }
+    },
+    {
+      icon: "article-line",
+      title: "撰写大创项目书",
+      action: props.showTextInput,
+      params: {
+        url: "project-document",
+        prompt: "请您简要描述您的大创项目，AI助手将会为您生成一份详细的大创项目书",
+        title: "撰写大创项目书",
+      }
+    },
+    {
+      icon: "file-code-line",
+      title: "代码编写",
+      action: props.showTextInput,
+      params: {
+        url: "code-edit",
+        prompt: "请您简要描述您的需求和使用的语言，AI助手将会为您生成一份详细的代码",
+        title: "代码编写",
+      }
+    },
   ]
 </script>
 
