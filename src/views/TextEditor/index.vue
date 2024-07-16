@@ -27,20 +27,26 @@
       ref="cardRef"
       :style="cardStyle" 
     >
-      <!-- <p>{{ cardMsg }}</p> -->
-      <el-input
-        v-model="cardMsg"
-
-        :autosize="{ minRows: 1, maxRows: 16 }"
-        type="textarea"
-        :placeholder="textPrompt"
-      />
-      <template v-if="isMultiMedia">
-        <el-button type="primary" @mousedown="copyText()">复制</el-button>
+      <template v-if="visibleChart">
+        <div :style="{ height: '400px', width: '680px' }">
+          <EChart ref="chartRef" :option="chartOption" :width="'100%'" :height="'400px'"/>
+        </div>
+        <el-button type="primary" @mousedown="setChartImage()">插入</el-button>
       </template>
       <template v-else>
-        <el-button type="primary" @mousedown="replace()">替换</el-button>
-        <el-button type="success" @mousedown="append()">追加</el-button>
+        <el-input
+          v-model="cardMsg"
+          :autosize="{ minRows: 1, maxRows: 16 }"
+          type="textarea"
+          :placeholder="textPrompt"
+        />
+        <template v-if="isMultiMedia">
+          <el-button type="primary" @mousedown="copyText()">复制</el-button>
+        </template>
+        <template v-else>
+          <el-button type="primary" @mousedown="replace()">替换</el-button>
+          <el-button type="success" @mousedown="append()">追加</el-button>
+        </template>
       </template>
       <el-button type="info" @mousedown="ignore()">舍弃</el-button>
     </el-card>
@@ -90,10 +96,18 @@
         :placeholder="textPrompt"
       />
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @mousedown="getAIDocument">开始生成</el-button>
+        <el-button type="primary" @mousedown="getAIResponse">开始生成</el-button>
       </div>
-      
     </el-dialog>
+
+    <!-- <el-dialog
+      v-model="visibleChart"
+      title="可视化图表"
+      width="50%"
+      @close="visibleChart = false"
+    >
+      可视化图表
+    </el-dialog> -->
 
     <el-header>
       <el-menu mode="horizontal" :ellipsis="false">
@@ -128,6 +142,7 @@
           @mouseup="selectText($event)" 
           @paste="handlePaste"
         />
+        <Echarts :option="option" />
       </el-main>
     </el-container>
   </el-container>
@@ -164,10 +179,144 @@
   import Outline from "./components/Outline.vue"
   import SelectionBubbleMenu from "./components/SelectionBubbleMenu.vue"
   import VoiceInput from "./components/VoiceInput.vue"
+  import EChart from './components/EChart.vue'
 
   import { useEditorStore } from '@/store'
   import { fa } from "element-plus/es/locales.mjs"
-import { handlePaste } from "@tiptap/pm/tables"
+  // import { handlePaste } from "@tiptap/pm/tables"
+  const option = reactive({
+	tooltip: {
+		trigger: 'axis',
+		axisPointer: {
+			type: 'shadow',
+			label: {
+				show: true
+			}
+		}
+	},
+	grid: {
+		left: '4%',
+		top: '15%',
+		right: '4%',
+		bottom: '10%'
+	},
+	legend: {
+		data: ['昨日总人数', '今日实时人数'],
+		top: '4%',
+		color: '#1FC3CE',
+		fontSize: 14,
+		selected: { 昨日使用率: false } // 不需要显示的设置为false
+	},
+	xAxis: {
+		data: [
+			'会议室1',
+			'会议室2',
+			'会议室3',
+			'会议室4',
+			'会议室5',
+			'会议室6',
+			'会议室7',
+			'会议室8',
+			'会议室9'
+		],
+		axisLine: {
+			show: true, //隐藏X轴轴线
+			lineStyle: {
+				color: '#eee',
+				width: 1
+			}
+		},
+		axisTick: {
+			show: true, //隐藏X轴刻度
+			alignWithLabel: true
+		},
+		axisLabel: {
+			show: true,
+			color: '#333', //X轴文字颜色
+			fontSize: 14
+		}
+	},
+	yAxis: [
+		{
+			type: 'value',
+			name: '人数',
+			nameTextStyle: {
+				color: '#333',
+				fontSize: 14
+			},
+			splitLine: {
+				show: true,
+				lineStyle: {
+					width: 1,
+					color: '#eee'
+				}
+			},
+			axisTick: {
+				show: false
+			},
+			axisLine: {
+				show: false
+			},
+			axisLabel: {
+				show: true,
+				color: '#333',
+				fontSize: 14
+			}
+		}
+	],
+	series: [
+		{
+			name: '昨日总人数',
+			type: 'bar',
+			barWidth: 18,
+			itemStyle: {
+				color: {
+					type: 'linear',
+					x: 0, // 右
+					y: 1, // 下
+					x2: 0, // 左
+					y2: 0, // 上
+					colorStops: [
+						{
+							offset: 0,
+							color: '#F89898' // 0% 处的颜色
+						},
+						{
+							offset: 1,
+							color: '#F56C6C' // 100% 处的颜色
+						}
+					]
+				}
+			},
+			data: [24, 45, 43, 35, 76, 154, 86, 42, 68]
+		},
+		{
+			name: '今日实时人数',
+			type: 'bar',
+			barWidth: 18,
+			itemStyle: {
+				color: {
+					type: 'linear',
+					x: 0, // 右
+					y: 1, // 下
+					x2: 0, // 左
+					y2: 0, // 上
+					colorStops: [
+						{
+							offset: 0,
+							color: '#52A7FF' // 0% 处的颜色
+						},
+						{
+							offset: 1,
+							color: '#409EFF' // 100% 处的颜色
+						}
+					]
+				}
+			},
+			data: [133, 23, 114, 67, 89, 35, 67, 96, 90]
+		}
+	]
+})
 
   const router = useRouter()
   const editorStore = useEditorStore()
@@ -374,6 +523,7 @@ import { handlePaste } from "@tiptap/pm/tables"
   }
   const ignore = () => {
     visibleCard.value = false
+    visibleChart.value = false
   }
   const copyText = async () => {
     try {
@@ -486,7 +636,6 @@ import { handlePaste } from "@tiptap/pm/tables"
     visibleCard.value = true
   }
 
-
   const cardStyle = computed(() => {
     if (isMultiMedia.value) {
       return {
@@ -521,7 +670,7 @@ import { handlePaste } from "@tiptap/pm/tables"
     textPrompt.value = params.prompt
     textTitle.value = params.title
   }
-  const getAIDocument = async () => {
+  const getAIResponse = async () => {
     if (!textInput.value) {
       ElMessage({
         message: '内容不能为空',
@@ -547,10 +696,14 @@ import { handlePaste } from "@tiptap/pm/tables"
       // accountError.value = response.data.error
       let res = response.data
       if (res.status){
-        // console.log(res)
-        cardMsg.value = res.answer
-        isMultiMedia.value = true
-        visibleCard.value = true
+        // console.log(res.answer)
+        const chartStrs: string[] = ["make-bar"]
+        if (chartStrs.includes(uploadUrl.value)) {
+          handleAIChart(res.answer)
+        } else {
+          handleAIDocument(res.answer)
+        }
+
       } else{
         console.log(res.error)
       }
@@ -562,6 +715,18 @@ import { handlePaste } from "@tiptap/pm/tables"
     }
   }
 
+  const handleAIDocument = (answer: string) => {
+    cardMsg.value = answer
+    isMultiMedia.value = true
+    visibleCard.value = true
+  } 
+  const handleAIChart = (answer: object) => {
+    visibleChart.value = true
+    chartOption.value = answer
+    visibleCard.value = true
+    isMultiMedia.value = true
+  }
+
   const addImageByBase64 = (base64String: string, fileName: string, fileType: string) => {
     const base64Src = `data:${fileType};base64,${base64String.split(',')[1]}`
     editor.value?.commands.setImage({
@@ -570,6 +735,23 @@ import { handlePaste } from "@tiptap/pm/tables"
       title: fileName,
     })
   }
+
+  // 可视化图表
+  const visibleChart = ref(false)
+  const chartRef = ref()
+  const chartOption = ref({})
+
+  const setChartImage = () => {
+    console.log("come")
+    editor.value?.commands.setImage({
+      src: chartRef.value?.getChartBase64(),
+      alt: chartRef.value?.title,
+      title: chartRef.value?.title,
+    })
+    visibleChart.value = false
+  }
+
+
 </script>
 
 <style lang="scss" scoped>

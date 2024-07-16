@@ -309,6 +309,16 @@
         title: "代码编写",
       }
     },
+    {
+      icon: "bar-chart-2-line",
+      title: "生成柱状图",
+      action: props.showTextInput,
+      params: {
+        url: "make-bar",
+        prompt: "请您简要描述您的需求和数据，AI助手将会为您生成一张对应的柱状图",
+        title: "生成柱状图",
+      }
+    },
   ]
 
   const handleImageFile = (event: Event) => {
