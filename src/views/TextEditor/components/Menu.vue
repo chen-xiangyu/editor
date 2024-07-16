@@ -6,38 +6,37 @@
           <MenuGroup :title="'文本处理:'" :items="textHandleItems"/>
         </el-col>
         <el-col :span="12">
-          <MenuGroup :title="'高亮标记:'" :items="highlightItems"/>
+          <!-- <MenuGroup :title="'高亮标记:'" :items="highlightItems"/> -->
+          <MenuGroup :title="'标题:'" :items="headerItems"/>
+         
         </el-col>
       </el-row>
-      
+        
       <el-row>
-        <el-col :span="12">
-          <MenuGroup :title="'标题:'" :items="headerItems"/>
-        </el-col>
         <el-col :span="12">
           <MenuGroup :title="'常用功能:'" :items="commonFunctionItems"/>
         </el-col>
-      </el-row>
-      <el-row>
-        <span class="title">AI助手：</span>
-        <template v-for="item in AIItems">
-          <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="item.title"
-            placement="top"
-            hide-after="10"
-          >
-            <button 
-              class="menu-item"
-              @click="item.action(item.params)"
-              >
-              <svg class="remix">
-                <use :xlink:href="`${remixiconUrl}#ri-${item.icon}`" />
-              </svg>
-            </button>
-          </el-tooltip>
-        </template>
+        <el-col :span="12">
+          <span class="title">AI助手：</span>
+          <template v-for="item in AIItems">
+            <el-tooltip
+              class="box-item"
+              effect="dark"
+              :content="item.title"
+              placement="top"
+              hide-after="10"
+            >
+              <button 
+                class="menu-item"
+                @click="item.action(item.params)"
+                >
+                <svg class="remix">
+                  <use :xlink:href="`${remixiconUrl}#ri-${item.icon}`" />
+                </svg>
+              </button>
+            </el-tooltip>
+          </template>
+        </el-col>
       </el-row>
       <input ref="imageFileInput" type="file" accept="image/jpeg, image/png, image/gif" style="display: none" @change="handleImageFile">
     </div>
@@ -122,6 +121,12 @@
       isActive: () => props.editor?.isActive('blockquote')
     },
     {
+      icon: 'mark-pen-line',
+      title: '高亮',
+      action: () => props.editor?.chain().focus().toggleHighlight().run(),
+      isActive: () => props.editor?.isActive('highlight')
+    },
+    {
       icon: 'arrow-go-back-line',
       title: '撤销',
       action: () => props.editor?.chain().focus().undo().run()
@@ -133,20 +138,20 @@
     }
   ]
 
-  const highlightItems = [
-    {
-      icon: 'mark-pen-line',
-      title: '高亮',
-      action: () => props.editor?.chain().focus().toggleHighlight().run(),
-      isActive: () => props.editor?.isActive('highlight')
-    },
-    // {
-    //   icon: 'external-link-line',
-    //   title: 'ExternalLink',
-    //   action: () => props.editor?.chain().focus().toggleCode().run(),
-    //   isActive: () => props.editor?.isActive('code')
-    // },
-  ]
+  // const highlightItems = [
+  //   {
+  //     icon: 'mark-pen-line',
+  //     title: '高亮',
+  //     action: () => props.editor?.chain().focus().toggleHighlight().run(),
+  //     isActive: () => props.editor?.isActive('highlight')
+  //   },
+  //   // {
+  //   //   icon: 'external-link-line',
+  //   //   title: 'ExternalLink',
+  //   //   action: () => props.editor?.chain().focus().toggleCode().run(),
+  //   //   isActive: () => props.editor?.isActive('code')
+  //   // },
+  // ]
 
   const headerItems = [
     {
@@ -317,6 +322,16 @@
         url: "make-bar",
         prompt: "请您简要描述您的需求和数据，AI助手将会为您生成一张对应的柱状图",
         title: "生成柱状图",
+      }
+    },
+    {
+      icon: "mind-map",
+      title: "生成思维导图",
+      action: props.showTextInput,
+      params: {
+        url: "make-mind-map",
+        prompt: "请您简要描述您的需求，AI助手将会为您生成一张对应的思维导图",
+        title: "生成思维导图",
       }
     },
   ]

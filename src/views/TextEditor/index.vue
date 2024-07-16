@@ -22,8 +22,9 @@
         <span class="item-text">{{ value.name }}</span>
       </div>
     </ul>
+    
     <el-card 
-      v-show="visibleCard" 
+      v-if="visibleCard" 
       ref="cardRef"
       :style="cardStyle" 
     >
@@ -32,6 +33,13 @@
           <EChart ref="chartRef" :option="chartOption" :width="'100%'" :height="'400px'"/>
         </div>
         <el-button type="primary" @mousedown="setChartImage()">插入</el-button>
+      </template>
+      
+      <template v-else-if="visibleMindMap">
+        <div :style="{ height: '400px', width: '680px' }">
+          <MindMap ref="mindMapRef" :data="mindMapData" :width="'100%'" :height="'400px'"/>
+        </div>
+        <el-button type="primary" @mousedown="setMindMapImage()">插入</el-button>
       </template>
       <template v-else>
         <el-input
@@ -180,6 +188,8 @@
   import SelectionBubbleMenu from "./components/SelectionBubbleMenu.vue"
   import VoiceInput from "./components/VoiceInput.vue"
   import EChart from './components/EChart.vue'
+  import MindMap from "./components/MindMap.vue"
+  import MindElixir, { MindElixirInstance, Options, MindElixirData } from 'mind-elixir'
 
   import { useEditorStore } from '@/store'
   import { fa } from "element-plus/es/locales.mjs"
@@ -696,10 +706,13 @@
       // accountError.value = response.data.error
       let res = response.data
       if (res.status){
-        // console.log(res.answer)
+        console.log(res.answer)
         const chartStrs: string[] = ["make-bar"]
         if (chartStrs.includes(uploadUrl.value)) {
           handleAIChart(res.answer)
+        } else if (uploadUrl.value === "make-mind-map") {
+          console.log("mind")
+          handleAIMindMap(res.answer)
         } else {
           handleAIDocument(res.answer)
         }
@@ -742,7 +755,6 @@
   const chartOption = ref({})
 
   const setChartImage = () => {
-    console.log("come")
     editor.value?.commands.setImage({
       src: chartRef.value?.getChartBase64(),
       alt: chartRef.value?.title,
@@ -751,7 +763,42 @@
     visibleChart.value = false
   }
 
+  // 思维导图
+  const visibleMindMap = ref(false)
+  const mindMapRef = ref()
+  const mindMapData = ref<MindElixirData | null>(null)
+  // const setMindMapImage = () => {
+  //   editor.value?.commands.setImage({
+  //     src: mindMapRef.value?.exportAsBase64('png'),
+  //     alt: "思维导图",
+  //     title: "思维导图",
+  //   })
+  //   visibleMindMap.value = false
+  // }
+  const setMindMapImage = async () => {
+  try {
+    const base64Image = await mindMapRef.value?.exportAsBase64('png');
+    if (base64Image) {
+      editor.value?.commands.setImage({
+        src: base64Image,
+        alt: "思维导图",
+        title: "思维导图",
+      });
+      visibleMindMap.value = false;
+    } else {
+      console.error('Failed to export mind map as base64.');
+    }
+  } catch (error) {
+    console.error('Error setting mind map image:', error);
+  }
+};
 
+  const handleAIMindMap = (answer: MindElixirData) => {
+    visibleMindMap.value = true
+    mindMapData.value = answer
+    visibleCard.value = true
+    isMultiMedia.value = true
+  }
 </script>
 
 <style lang="scss" scoped>

@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartRef" :style="{ height: props.height, width: props.width }"></div>
+  <div ref="chartRef" :style="{ width: props.width, height: props.height }"></div>
 </template>
 
 <script setup lang="ts" name="EChart">
