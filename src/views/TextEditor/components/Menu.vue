@@ -222,6 +222,46 @@
         })
       }
     },
+    {
+      icon: 'table-3',
+      title: '插入表格',
+      action: () => props.editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+    },
+    {
+      icon: 'delete-bin-2-line',
+      title: '删除表格',
+      action: () => props.editor?.chain().focus().deleteTable().run()
+    },
+    {
+      icon: 'insert-column-left',
+      title: '向左侧添加列',
+      action: () => props.editor?.chain().focus().addColumnBefore().run()
+    },
+    {
+      icon: 'insert-column-right',
+      title: '向右侧添加列',
+      action: () => props.editor?.chain().focus().addColumnAfter().run()
+    },
+    {
+      icon: 'delete-column',
+      title: '删除列',
+      action: () => props.editor?.chain().focus().deleteColumn().run()
+    },
+    {
+      icon: 'insert-row-top',
+      title: '向上方添加行',
+      action: () => props.editor?.chain().focus().addRowBefore().run()
+    },
+    {
+      icon: 'insert-row-bottom',
+      title: '向下方添加行',
+      action: () => props.editor?.chain().focus().addRowAfter().run()
+    },
+    {
+      icon: 'delete-row',
+      title: '删除行',
+      action: () => props.editor?.chain().focus().deleteRow().run()
+    },
   ]
 
   const AIItems = [

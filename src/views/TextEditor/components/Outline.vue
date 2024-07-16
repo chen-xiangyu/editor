@@ -47,6 +47,7 @@
     border-radius: 0.5rem;
     padding: 0rem;
     background: rgba(black, 0.1);
+    height: 100%;
 
     &__list {
       list-style: none;
@@ -55,12 +56,14 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start; /* 左对齐 */
+      height:100%;
     }
+
 
     &__item {
       // width: 100%;
 
-      a:hover {
+      &:hover {
         opacity: 0.5;
       }
       &--1 {

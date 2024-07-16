@@ -148,6 +148,10 @@
   import Image from '@tiptap/extension-image'
   import Youtube from '@tiptap/extension-youtube'
   import { Markdown } from 'tiptap-markdown'
+  import Table from '@tiptap/extension-table'
+  import TableCell from '@tiptap/extension-table-cell'
+  import TableHeader from '@tiptap/extension-table-header'
+  import TableRow from '@tiptap/extension-table-row'
 
   import remixiconUrl from 'remixicon/fonts/remixicon.symbol.svg'
   import { UploadFilled } from '@element-plus/icons-vue'
@@ -196,6 +200,12 @@ import { handlePaste } from "@tiptap/pm/tables"
         height: 320,
       }),
       Markdown,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
 
       // Blockquote.configure({
       //   HTMLAttributes: {
