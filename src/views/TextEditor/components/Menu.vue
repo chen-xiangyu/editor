@@ -7,7 +7,7 @@
         </el-col>
         <el-col :span="12">
           <!-- <MenuGroup :title="'高亮标记:'" :items="highlightItems"/> -->
-          <MenuGroup :title="'标题:'" :items="headerItems"/>
+          <MenuGroup :title="'层次排版:'" :items="headerItems"/>
          
         </el-col>
       </el-row>
@@ -57,6 +57,7 @@
     showVoiceInput: Function,
     showTextInput: Function,
     addImageByBase64: Function,
+    autoTypography: Function,
   }>()
 
   const textHandleItems = [
@@ -332,6 +333,14 @@
         url: "make-mind-map",
         prompt: "请您简要描述您的需求，AI助手将会为您生成一张对应的思维导图",
         title: "生成思维导图",
+      }
+    },
+    {
+      icon: "align-justify",
+      title: "自动排版",
+      action: props.autoTypography,
+      params: {
+        url: "auto-typography",
       }
     },
   ]

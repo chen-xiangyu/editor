@@ -140,6 +140,7 @@
           :showVoiceInput="showVoiceInput"
           :showTextInput="showTextInput"
           :addImageByBase64="addImageByBase64"
+          :autoTypography="autoTypography"
         />
         <!-- <SelectionBubbleMenu ref="bubbleRef" :editor="editor as Editor" :showDataModal="showDataModal" /> -->
         <editor-content 
@@ -798,6 +799,31 @@
     mindMapData.value = answer
     visibleCard.value = true
     isMultiMedia.value = true
+  }
+
+  // 自动排版
+  const autoTypography = async (params: any) => {
+    try {
+      console.log("on mounted")
+      const formData = new FormData()
+      formData.append('question', editor.value?.getText() as string)
+      const response = await axios.post(
+        `/${params.url}/`,
+        formData,
+      )
+      let res = response.data
+      console.log(res.answer)
+      if (res.status){
+        editor.value?.commands.setContent(res.answer)
+
+      } else{
+        console.log(res.error)
+      }
+      console.log('POST 请求成功：', response.data)
+      
+    } catch (error) {
+      console.error('POST 请求失败：', error)
+    }
   }
 </script>
 
